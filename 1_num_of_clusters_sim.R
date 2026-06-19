@@ -13,7 +13,6 @@ library(MASS)
 library(flowCore)
 library(flowWorkspace)
 library(ggplot2)
-library(Rclusterpp)
 library(reticulate)
 parc <- import("parc",convert=FALSE)
 source(file.path(normalizePath("."),"functionsForBenchmarking.R"))
@@ -22,9 +21,9 @@ startingPath <- normalizePath(".")
 #
 #containers for results
 #
-parcNC <- rcppNC <- FlowORCNC <- kmeansNC <-  faustNC <- FlowSOMNC <- phenographNC <- depecheNC <- flowMeansNC <- c()
-parcAll <- rcppAll <- FlowORCAll <- kmeansAll <-  faustAll <- FlowSOMAll <- phenographAll <- depecheAll <- flowMeansAll <- c()
-parcPheno <- rcppPheno <- FlowORCPheno <- kmeansPheno <-  faustPheno <- FlowSOMPheno<- phenographPheno <- depechePheno <- flowMeansPheno <- c()
+parcNC <- FlowORCNC <- kmeansNC <-  faustNC <- FlowSOMNC <- phenographNC <- depecheNC <- flowMeansNC <- c()
+parcAll <- FlowORCAll <- kmeansAll <-  faustAll <- FlowSOMAll <- phenographAll <- depecheAll <- flowMeansAll <- c()
+parcPheno <- FlowORCPheno <- kmeansPheno <-  faustPheno <- FlowSOMPheno<- phenographPheno <- depechePheno <- flowMeansPheno <- c()
 faustPctAnn <- c()
 #
 #simulation parameters
@@ -224,20 +223,6 @@ kmeansClusterLabels <- as.numeric(kmeansResult$cluster)
 kmeansNC <- append(kmeansNC,length(table(kmeansClusterLabels)))
 
 #
-#apply rcpp to the simulated datatset, with the tree cut at the true number of clusters
-#
-print("Starting rcpp")
-rcppResult <- Rclusterpp.hclust(x=exprsMat)
-print("Rcpp complete")
-#
-#per the implementation, the k parameter in cutree cannot exceed the number of rows of the merge entry plus 1.
-#
-cutreekVal <-  min(numberOfClusters,(nrow(rcppResult$merge)+1))
-print(paste0("Using cutreekVal: ", cutreekVal))
-rcppClusterLabels <- cutree(rcppResult, k = cutreekVal)
-rcppNC <- append(rcppNC,length(table(rcppClusterLabels)))
-
-#
 #apply PARC to the simulated dataset
 #
 print("Starting parc")
@@ -298,13 +283,6 @@ kmeansScores <- ClusterR::external_validation(true_labels=trueNumericLabels,
                                                summary_stats=TRUE)
 print("End results all kmeans")
 
-print("Start results all rcpp")
-rcppScores <- ClusterR::external_validation(true_labels=trueNumericLabels,
-                                               clusters=as.numeric(rcppClusterLabels),
-                                               method="adjusted_rand_index",
-                                               summary_stats=TRUE)
-print("End results all rcpp")
-
 
 print("Start results all parc")
 parcScores <- ClusterR::external_validation(true_labels=trueNumericLabels,
@@ -352,7 +330,6 @@ phenographAll <- append(phenographAll,phenographScores)
 flowMeansAll <- append(flowMeansAll,flowMeansScores)
 depecheAll <- append(depecheAll,depecheScores)
 kmeansAll <- append(kmeansAll,kmeansScores)
-rcppAll <- append(rcppAll,rcppScores)
 parcAll <- append(parcAll,parcScores)
 
 #
@@ -417,14 +394,6 @@ kmeansScoresPheno <- external_validation(true_labels=trueNumericLabels[faustPhen
                                             summary_stats=TRUE)
 print("End results pheno kmeans")
 
-print("Start results pheno rcpp")
-rcppScoresPheno <- external_validation(true_labels=trueNumericLabels[faustPhenoLookup],
-                                            clusters=rcppClusterLabels[faustPhenoLookup],
-                                            method="adjusted_rand_index",
-                                            summary_stats=TRUE)
-print("End results pheno rcpp")
-
-
 print("Start results pheno parc")
 parcScoresPheno <- external_validation(true_labels=trueNumericLabels[faustPhenoLookup],
                                        clusters=parcClusterLabels[faustPhenoLookup],
@@ -442,7 +411,6 @@ phenographPheno <- append(phenographPheno,phenographScoresPheno)
 depechePheno <- append(depechePheno,depecheScoresPheno)
 flowMeansPheno <- append(flowMeansPheno,flowMeansScoresPheno)
 kmeansPheno <- append(kmeansPheno,kmeansScoresPheno)
-rcppPheno <- append(rcppPheno,rcppScoresPheno)
 parcPheno <- append(parcPheno,parcScoresPheno)
 
 #
@@ -462,7 +430,6 @@ saveRDS(phenographNC,file.path(normalizePath("."),jobPath,"results","intermediat
 saveRDS(depecheNC,file.path(normalizePath("."),jobPath,"results","intermediate_depecheNC.rds"))
 saveRDS(flowMeansNC,file.path(normalizePath("."),jobPath,"results","intermediate_flowMeansNC.rds"))
 saveRDS(kmeansNC,file.path(normalizePath("."),jobPath,"results","intermediate_kmeansNC.rds"))
-saveRDS(rcppNC,file.path(normalizePath("."),jobPath,"results","intermediate_rcppNC.rds"))
 saveRDS(parcNC,file.path(normalizePath("."),jobPath,"results","intermediate_parcNC.rds"))
 
 saveRDS(faustAll,file.path(normalizePath("."),jobPath,"results","intermediate_faustAll.rds"))
@@ -472,7 +439,6 @@ saveRDS(phenographAll,file.path(normalizePath("."),jobPath,"results","intermedia
 saveRDS(depecheAll,file.path(normalizePath("."),jobPath,"results","intermediate_depecheAll.rds"))
 saveRDS(flowMeansAll,file.path(normalizePath("."),jobPath,"results","intermediate_flowMeansAll.rds"))
 saveRDS(kmeansAll,file.path(normalizePath("."),jobPath,"results","intermediate_kmeansAll.rds"))
-saveRDS(rcppAll,file.path(normalizePath("."),jobPath,"results","intermediate_rcppAll.rds"))
 saveRDS(parcAll,file.path(normalizePath("."),jobPath,"results","intermediate_parcAll.rds"))
 
 saveRDS(faustPheno,file.path(normalizePath("."),jobPath,"results","intermediate_faustPheno.rds"))
@@ -482,7 +448,6 @@ saveRDS(phenographPheno,file.path(normalizePath("."),jobPath,"results","intermed
 saveRDS(depechePheno,file.path(normalizePath("."),jobPath,"results","intermediate_depechePheno.rds"))
 saveRDS(flowMeansPheno,file.path(normalizePath("."),jobPath,"results","intermediate_flowMeansPheno.rds"))
 saveRDS(kmeansPheno,file.path(normalizePath("."),jobPath,"results","intermediate_kmeansPheno.rds"))
-saveRDS(rcppPheno,file.path(normalizePath("."),jobPath,"results","intermediate_rcppPheno.rds"))
 saveRDS(parcPheno,file.path(normalizePath("."),jobPath,"results","intermediate_parcPheno.rds"))
 }
 #
@@ -497,7 +462,6 @@ saveRDS(phenographNC,file.path(normalizePath("."),jobPath,"results","final_pheno
 saveRDS(depecheNC,file.path(normalizePath("."),jobPath,"results","final_depecheNC.rds"))
 saveRDS(flowMeansNC,file.path(normalizePath("."),jobPath,"results","final_flowMeansNC.rds"))
 saveRDS(kmeansNC,file.path(normalizePath("."),jobPath,"results","final_kmeansNC.rds"))
-saveRDS(rcppNC,file.path(normalizePath("."),jobPath,"results","final_rcppNC.rds"))
 saveRDS(parcNC,file.path(normalizePath("."),jobPath,"results","final_parcNC.rds"))
 
 saveRDS(faustAll,file.path(normalizePath("."),jobPath,"results","final_faustAll.rds"))
@@ -507,7 +471,6 @@ saveRDS(phenographAll,file.path(normalizePath("."),jobPath,"results","final_phen
 saveRDS(depecheAll,file.path(normalizePath("."),jobPath,"results","final_depecheAll.rds"))
 saveRDS(flowMeansAll,file.path(normalizePath("."),jobPath,"results","final_flowMeansAll.rds"))
 saveRDS(kmeansAll,file.path(normalizePath("."),jobPath,"results","final_kmeansAll.rds"))
-saveRDS(rcppAll,file.path(normalizePath("."),jobPath,"results","final_rcppAll.rds"))
 saveRDS(parcAll,file.path(normalizePath("."),jobPath,"results","final_parcAll.rds"))
 
 saveRDS(faustPheno,file.path(normalizePath("."),jobPath,"results","final_faustPheno.rds"))
@@ -517,5 +480,4 @@ saveRDS(phenographPheno,file.path(normalizePath("."),jobPath,"results","final_ph
 saveRDS(depechePheno,file.path(normalizePath("."),jobPath,"results","final_depechePheno.rds"))
 saveRDS(flowMeansPheno,file.path(normalizePath("."),jobPath,"results","final_flowMeansPheno.rds"))
 saveRDS(kmeansPheno,file.path(normalizePath("."),jobPath,"results","final_kmeansPheno.rds"))
-saveRDS(rcppPheno,file.path(normalizePath("."),jobPath,"results","final_rcppPheno.rds"))
 saveRDS(parcPheno,file.path(normalizePath("."),jobPath,"results","final_parcPheno.rds"))

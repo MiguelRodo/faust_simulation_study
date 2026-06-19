@@ -5,7 +5,6 @@ library(edgeR)
 library(diffcyt)
 library(citrus)
 library(cvAUC)
-library(Rclusterpp)
 library(doParallel)
 library(ClusterR)
 library(flowMeans)
@@ -124,7 +123,6 @@ print(paste0("Processing ",numberOfClusters," number of clusters."))
 #Initialze containers for cvAUC/ARI of best cluster simulation
 #
 ################################################################################################
-rclusterppSimResults <- list()
 phenographSimResults <- list()
 PARCSimResults <- list()
 depecheSimResults <- list()
@@ -719,46 +717,6 @@ PARCSimResults <- append(PARCSimResults,list(PARCResults))
 saveRDS(PARCSimResults,
         file.path(normalizePath("."),jobPath,"results","PARC_results.rds"))
 
-
-################################################################################################
-#
-#apply Rclusterpp to the simulated data
-#
-################################################################################################
-rclusterppResult <- Rclusterpp.hclust(x=exprsMat)
-#
-#per the implementation, the k parameter in cutree cannot exceed the number of rows of the merge entry plus 1.
-#
-rclusterppClusterLabels <- cutree(rclusterppResult, k = min(numberOfClusters,(nrow(rclusterppResult$merge)+1)))
-rclusterppNC <- length(table(rclusterppClusterLabels))
-rclusterppCountMatrix <- getCountMatrixFromClustering(
-    clusterSource=rclusterppClusterLabels,
-    numberOfCols=rclusterppNC,
-    sampleNames=names(table(sampleLookups)),
-    sampleLookups=sampleLookups
-)
-rclusterppDerivedClusterARIs <- getCluteringARIsRelativeSpike(
-    clusterSource=rclusterppClusterLabels,
-    truthSource=spikedInClustering
-)
-rclusterppDerivedClusterLabels <- getLabelsForClustering(
-    clusterSource=rclusterppClusterLabels,
-    expressionSource=exprsMat
-)
-rclusterppResults <- computeAUCforBestCluster(
-    countMatrix=rclusterppCountMatrix,
-    responderStatusDF=resDF,
-    derivedARIs=rclusterppDerivedClusterARIs,
-    derivedPhenotypes=rclusterppDerivedClusterLabels
-)
-rclusterppResults$numberOfClusters <- numberOfClusters
-rclusterppResults$expectedFoldChange <- ((clusterProbVec[targetSpikeRanks][1])/(clusterProbVec[targetSpikeRanks][2]))
-rclusterppResults$iterNum <- iterNum
-rclusterppResults$tsprNum <- tsprNum
-rclusterppResults$spikedPop <- simmedExp[["spikedPop"]]
-rclusterppSimResults <- append(rclusterppSimResults,list(rclusterppResults))
-saveRDS(rclusterppSimResults,
-        file.path(normalizePath("."),jobPath,"results","rclusterpp_results.rds"))
 
 ###########################################################################
 #

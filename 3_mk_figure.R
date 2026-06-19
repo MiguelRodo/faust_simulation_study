@@ -17,7 +17,7 @@ set.seed(77)
 myColors <- createPalette(N=13,seedcolors=brewer.pal(7, "Set1"),M=10000)
 myColors <- myColors[sample(seq(13),13)]
 names(myColors) <- c("k-means","FlowSOM","DEPECHE","Phenograph","flowMeans",
-                     "Rclusterpp","FlowSOM\n(Oracle)","FAUST","FAUST\n(Annotated subset)",
+                     "FlowSOM\n(Oracle)","FAUST","FAUST\n(Annotated subset)",
                      "Citrus","FlowSOM\n(2*Oracle)","diffCyt","PARC")
 myColors[["FlowSOM\n(2*Oracle)"]] <- "#B56340"
 myColors[["FAUST\n(Annotated subset)"]] <- "#E0DED6"
@@ -30,7 +30,7 @@ legendDF <- data.frame(
               x=rep(c(0,1),13),
               y=seq(2*13),
               Method=c("k-means","FlowSOM","DEPECHE","Phenograph","flowMeans",
-                       "Rclusterpp","FlowSOM\n(Oracle)","FAUST","FAUST\n(Annotated subset)",
+                       "FlowSOM\n(Oracle)","FAUST","FAUST\n(Annotated subset)",
                        "Citrus","FlowSOM\n(2*Oracle)","diffCyt","PARC")
 )
 legendDF$Method <- as.factor(legendDF$Method)
@@ -112,7 +112,6 @@ get_noc_plot <- function(simType) {
     depecheNC <- readRDS(file.path(resultsDir,simType,"results","final_depecheNC.rds"))
     phenographNC <- readRDS(file.path(resultsDir,simType,"results","final_phenographNC.rds"))
     kmeansNC <- readRDS(file.path(resultsDir,simType,"results","final_kmeansNC.rds"))
-    rcppNC <- readRDS(file.path(resultsDir,simType,"results","final_rcppNC.rds"))
     parcNC <- readRDS(file.path(resultsDir,simType,"results","final_parcNC.rds"))
     plotDF <- Reduce(rbind,list(
                                faust=computeNCDF(faustNC,"FAUST"),
@@ -147,7 +146,6 @@ get_noc_plot <- function(simType) {
     phenoMetric <- readRDS(file.path(resultsDir,simType,"results","final_phenographAll.rds"))
     depecheMetric <- readRDS(file.path(resultsDir,simType,"results","final_depecheAll.rds"))
     kmeansMetric <- readRDS(file.path(resultsDir,simType,"results","final_kmeansAll.rds"))
-    rcppMetric <- readRDS(file.path(resultsDir,simType,"results","final_rcppAll.rds"))
     parcMetric <- readRDS(file.path(resultsDir,simType,"results","final_parcAll.rds"))
 
     metricPlotDF <- Reduce(rbind,list(
@@ -159,7 +157,6 @@ get_noc_plot <- function(simType) {
                                      FlowSOMDF=computeMetricDF(FlowSOMMetric,"FlowSOM"),
                                      FlowORCDF=computeMetricDF(FlowORCMetric,"FlowSOM\n(Oracle)"),
                                      kmeansDF=computeMetricDF(kmeansMetric,"k-means"),
-                                     rcppDF=computeMetricDF(rcppMetric,"Rclusterpp"),
                                      parcDF=computeMetricDF(parcMetric,"PARC")
                                  ))
     metricPlotDF$Method <- as.factor(metricPlotDF$Method)
@@ -236,7 +233,6 @@ plotDF$Method <- gsub("dsCitrus","Citrus",plotDF$Method)
 plotDF$Method <- gsub("depeche","DEPECHE",plotDF$Method)
 plotDF$Method <- gsub("kmeans","k-means",plotDF$Method)
 plotDF$Method <- gsub("diffcyt","diffCyt",plotDF$Method)
-plotDF$Method <- gsub("rclusterpp","Rclusterpp",plotDF$Method)
 plotDF$Method <- as.factor(plotDF$Method)
 plotDF$Method <- relevel(plotDF$Method,ref="FAUST")
 
@@ -285,7 +281,6 @@ plotDF$Method <- gsub("dsCitrus","Citrus",plotDF$Method)
 plotDF$Method <- gsub("depeche","DEPECHE",plotDF$Method)
 plotDF$Method <- gsub("kmeans","k-means",plotDF$Method)
 plotDF$Method <- gsub("diffcyt","diffCyt",plotDF$Method)
-plotDF$Method <- gsub("rclusterpp","Rclusterpp",plotDF$Method)
 plotDF$Method <- as.factor(plotDF$Method)
 plotDF$Method <- relevel(plotDF$Method,ref="FAUST")
 
